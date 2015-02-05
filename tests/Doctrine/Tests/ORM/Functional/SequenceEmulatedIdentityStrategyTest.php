@@ -44,11 +44,24 @@ class SequenceEmulatedIdentityStrategyTest extends \Doctrine\Tests\OrmFunctional
                 new Sequence($platform->getIdentitySequenceName('seq_identity', 'id'))
             )
         );
+        $connection->executeQuery(
+            $platform->getDropSequenceSQL(
+                new Sequence($platform->getIdentitySequenceName('seq_identity_sequence_generator', 'id'))
+            )
+        );
     }
 
     public function testPreSavePostSaveCallbacksAreInvoked()
     {
         $entity = new SequenceEmulatedIdentityEntity();
+        $entity->setValue('hello');
+        $this->_em->persist($entity);
+        $this->_em->flush();
+        $this->assertTrue(is_numeric($entity->getId()));
+        $this->assertTrue($entity->getId() > 0);
+        $this->assertTrue($this->_em->contains($entity));
+
+        $entity = new SequenceEmulatedIdentityWithSequenceGeneratorEntity();
         $entity->setValue('hello');
         $this->_em->persist($entity);
         $this->_em->flush();
@@ -62,6 +75,35 @@ class SequenceEmulatedIdentityStrategyTest extends \Doctrine\Tests\OrmFunctional
 class SequenceEmulatedIdentityEntity
 {
     /** @Id @Column(type="integer") @GeneratedValue(strategy="IDENTITY") */
+    private $id;
+
+    /** @Column(type="string") */
+    private $value;
+
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    public function getValue()
+    {
+        return $this->value;
+    }
+
+    public function setValue($value)
+    {
+        $this->value = $value;
+    }
+}
+
+/** @Entity @Table(name="seq_identity_sequence_generator") */
+class SequenceEmulatedIdentityWithSequenceGeneratorEntity
+{
+    /**
+     * @Id @Column(type="integer")
+     * @GeneratedValue(strategy="IDENTITY")
+     * @SequenceGenerator(sequenceName="entity_id_seq", initialValue=1, allocationSize=100)
+     */
     private $id;
 
     /** @Column(type="string") */

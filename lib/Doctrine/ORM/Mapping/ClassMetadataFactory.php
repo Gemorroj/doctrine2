@@ -632,10 +632,14 @@ class ClassMetadataFactory extends AbstractClassMetadataFactory
                     $columnName     = $class->getSingleIdentifierColumnName();
                     $quoted         = isset($class->fieldMappings[$fieldName]['quoted']) || isset($class->table['quoted']);
                     $sequencePrefix = $class->getSequencePrefix($this->getTargetPlatform());
-                    $sequenceName   = $this->getTargetPlatform()->getIdentitySequenceName($sequencePrefix, $columnName);
-                    $definition     = array(
-                        'sequenceName' => $this->getTargetPlatform()->fixSchemaElementName($sequenceName)
-                    );
+
+                    $definition = $class->sequenceGeneratorDefinition;
+                    if (!$definition) {
+                        $sequenceName   = $this->targetPlatform->getIdentitySequenceName($sequencePrefix, $columnName);
+                        $definition = array(
+                            'sequenceName' => $this->targetPlatform->fixSchemaElementName($sequenceName)
+                        );
+                    }
 
                     if ($quoted) {
                         $definition['quoted'] = true;
